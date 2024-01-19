@@ -1,0 +1,19 @@
+{
+	"folders":
+	[
+		{
+			"path": ".",
+		}
+	],
+	"debugger_configurations":
+	[
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Launch",
+			"program": "${folder}/target/debug/funnylauncher.exe",
+			"args": [],
+			"cwd": "${folder}"
+		},
+	],
+}
