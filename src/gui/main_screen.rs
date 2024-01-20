@@ -4,12 +4,15 @@ use egui::ProgressBar;
 
 use crate::launcher::commands::Command;
 
+use super::message_screen::MsgBoxScreen;
+
 pub struct MainScreen {
     logic_sender: Sender<Command>,
     launcher_receiver: Receiver<Command>,
     in_game: Arc<Mutex<bool>>,
     text: String,
-    progress: f32
+    progress: f32,
+    info_msg: MsgBoxScreen,
 }
 
 impl MainScreen {
@@ -20,6 +23,7 @@ impl MainScreen {
             launcher_receiver,
             text: String::new(),
             progress: 1.0,
+            info_msg: MsgBoxScreen::info("Info", "Some message"),
         }
     }
 }
@@ -67,6 +71,8 @@ impl eframe::App for MainScreen {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.label("Some news will be here");
         });
+
+        //self.info_msg.show(ctx);
 
         ctx.request_repaint();
     }

@@ -6,8 +6,8 @@ use crate::utils::constants::CAPTION;
 
 use self::main_screen::MainScreen;
 
-pub mod error_screen;
 pub mod main_screen;
+pub mod message_screen;
 pub mod update_screen;
 
 pub struct GUI {
