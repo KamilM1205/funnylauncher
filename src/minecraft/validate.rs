@@ -1,24 +1,27 @@
+use std::error::Error;
+
+use log::{debug, info};
+
 use crate::utils::constants::URL;
 
-pub fn is_valid_files() -> bool {
-    let mut path = dirs::data_dir().unwrap();
+pub const VALIDATOR: &str = "MINECRAFT/VALIDATOR";
+
+pub fn is_valid_files() -> Result<bool, Box<dyn Error>> {
+    let mut path = dirs::data_dir().ok_or("Couldn't get data dir")?;
     path.push(".funnycraft");
 
-    let checksum = match checksumdir::checksumdir(path.to_str().unwrap()) {
-        Ok(s) => s,
-        Err(_) => "error".to_string(),
-    };
+    info!(target: VALIDATOR, "Checking game hash...");
 
-    if checksum == "error" {
-        return false;
-    }
+    let checksum =
+        checksumdir::checksumdir(path.to_str().ok_or("Couldn't convert PathBuf to str.")?)?;
+    let resp = reqwest::blocking::get(format!("{}/checksum", URL))?
+    .text()
+    .unwrap_or_default();
+    debug!(target: VALIDATOR, "Local hash: {checksum} | Server hash: {resp}");
 
-    let resp = reqwest::blocking::get(format!("{}/checksum", URL)).unwrap().text().unwrap_or_default();
-    println!("{} {}", resp, checksum);
-    
     if resp != checksum {
-        return false;
+        return Ok(false);
     }
 
-    true
+    Ok(true)
 }

@@ -17,3 +17,6 @@ tokio = { version = "1", features = ["full"] }
 futures-util = "0.3"
 checksumdir = "0.3.0"
 unzpack = "0.1"
+log = "0.4.20"
+log4rs = { version = "1.2.0", features = ["console_appender", "file_appender"] }
+msgbox = "0.7.0"

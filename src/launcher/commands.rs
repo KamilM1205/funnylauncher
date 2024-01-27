@@ -6,6 +6,7 @@ pub enum Command {
     DOWNLOAD((u64, u64)),
     UNZIPING,
     PLAY,
-    NONE,     // Nothing
-    EXIT,     // Exit from launcher
+    ERROR(String),
+    NONE, // Nothing
+    EXIT, // Exit from launcher
 }

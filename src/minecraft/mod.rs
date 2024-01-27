@@ -1,4 +1,4 @@
-use crate::utils::constants::{CAPTION, MINECRAFT_FORGE, MINECRAFT_VERSION, VERSION, WORKING_DIR};
+use crate::utils::constants::{MINECRAFT_FORGE, MINECRAFT_VERSION, WORKING_DIR};
 use std::{
     error::Error,
     fs,
@@ -12,6 +12,7 @@ pub mod minecraft_json;
 mod tests;
 pub mod validate;
 
+pub const MINECRAFT: &str = "MINECRAFT";
 // Arguments to launch java
 pub struct JvmOptions {
     native_path: String,
@@ -107,7 +108,7 @@ impl GameOptions {
 
 // Struct for laucnhing game
 pub struct Minecraft {
-    mc_data: MinecraftJson,
+    //mc_data: MinecraftJson,
     forge_data: MinecraftJson,
     jvm_options: JvmOptions,
     game_options: GameOptions,
@@ -151,7 +152,7 @@ impl Minecraft {
                 )))
             }
         };
-        let mc_data = MinecraftJson::new(&mc_raw_data).expect("Minecraft config not found.");
+        let mc_data = MinecraftJson::new(&mc_raw_data)?;
 
         let mut jvm_options = JvmOptions::default();
 
@@ -207,7 +208,7 @@ impl Minecraft {
             .clone();
 
         Ok(Self {
-            mc_data,
+            //mc_data,
             forge_data,
             jvm_options,
             game_options,
@@ -234,9 +235,11 @@ impl Minecraft {
             .to_str()
             .ok_or("Couldn't find runtime dir. Check your client.")?;
 
-        Ok(Command::new(runtime_path)
-            .args(args)
-            .spawn()
-            .expect("Error while trying run minecraft"))
+        let ret = match Command::new(runtime_path).args(args).spawn() {
+            Ok(s) => Ok(s),
+            Err(e) => Err(format!("Error while trying run minecraft: {e}")),
+        }?;
+
+        Ok(ret)
     }
 }

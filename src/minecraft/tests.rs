@@ -1,10 +1,3 @@
-#[allow(dead_code)]
-use std::fs;
-
-use crate::minecraft::minecraft_json::MinecraftJson;
-
-use super::minecraft_json::Library;
-
 #[test]
 fn load_forge_json_test() {
     let data = fs::read_to_string("tests_file/1.16.5-forge-36.2.34.json").unwrap();

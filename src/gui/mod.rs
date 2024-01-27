@@ -1,6 +1,10 @@
 use crate::launcher::commands::Command;
 use egui::{Style, Visuals};
-use std::sync::{mpsc::{Sender, Receiver}, Arc, Mutex};
+use log::debug;
+use std::sync::{
+    mpsc::{Receiver, Sender},
+    Arc, Mutex,
+};
 
 use crate::utils::constants::CAPTION;
 
@@ -16,11 +20,14 @@ pub struct GUI {
 }
 
 impl GUI {
-    pub fn new(logic_sender: Sender<Command>, in_game: Arc<Mutex<bool>>, ) -> Self {
-        Self { logic_sender, in_game }
+    pub fn new(logic_sender: Sender<Command>, in_game: Arc<Mutex<bool>>) -> Self {
+        Self {
+            logic_sender,
+            in_game,
+        }
     }
 
-    pub fn run(&mut self, launcher_receiver: Receiver<Command>) {
+    pub fn run(&mut self, launcher_receiver: Receiver<Command>) -> Result<(), eframe::Error> {
         let options = eframe::NativeOptions {
             viewport: egui::ViewportBuilder::default().with_inner_size([640.0, 480.0]),
             ..Default::default()
@@ -28,7 +35,9 @@ impl GUI {
 
         let logic_sender = self.logic_sender.clone();
         let in_game = self.in_game.clone();
-        
+
+        debug!("Starting main screen.");
+
         eframe::run_native(
             CAPTION,
             options,
@@ -41,7 +50,8 @@ impl GUI {
 
                 Box::new(MainScreen::new(logic_sender, in_game, launcher_receiver))
             }),
-        )
-        .unwrap();
+        )?;
+
+        Ok(())
     }
 }
