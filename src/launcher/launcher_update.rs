@@ -183,7 +183,9 @@ pub fn need_update() -> Result<bool, Box<dyn std::error::Error>> {
             error!(target: UPDATE, "Error while \"version\" request: {e}");
             msgbox::create(
                 "Error",
-                &format!("Couldn't connect to update server. Check your internet connection. Error: {e}"),
+                &format!(
+                    "Couldn't connect to update server. Check your internet connection. Error: {e}"
+                ),
                 msgbox::IconType::Error,
             )
             .unwrap_or_else(|e| {

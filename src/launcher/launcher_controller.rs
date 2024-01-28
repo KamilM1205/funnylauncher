@@ -2,7 +2,7 @@ use log::{debug, error};
 
 use crate::launcher::commands::Command;
 use crate::minecraft;
-use crate::minecraft::downloader::{download_minecraft, self};
+use crate::minecraft::downloader::{self, download_minecraft};
 use crate::minecraft::validate::{self, is_valid_files};
 use crate::{gui::GUI, minecraft::Minecraft};
 use std::process::ExitStatus;
@@ -51,7 +51,7 @@ impl LauncherController {
                                             error!(target: CONTROLLER, "Error while sending \"ERROR\" command.");
                                             panic!();
                                         });
-                                    break 'run
+                                    break 'run;
                                 }
                             };
                             if !is_valid {

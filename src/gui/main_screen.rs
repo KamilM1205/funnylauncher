@@ -8,7 +8,7 @@ use log::{debug, error};
 
 use crate::launcher::commands::Command;
 
-use super::message_screen::MsgBoxScreen;
+use super::{message_screen::MsgBoxScreen, titlebar::TitleBar};
 
 const MAINSCREEN: &str = "MAINSCREEN";
 
@@ -26,6 +26,7 @@ pub struct MainScreen {
     text: String,
     progress: f32,
     error_msg: MsgBoxScreen,
+    titlebar: TitleBar,
 }
 
 impl MainScreen {
@@ -42,6 +43,7 @@ impl MainScreen {
             text: String::from("Готов к запуску"),
             progress: 1.0,
             error_msg: MsgBoxScreen::default(),
+            titlebar: TitleBar::new("FunnyLauncher"),
         }
     }
 
@@ -129,6 +131,8 @@ impl eframe::App for MainScreen {
         }
 
         self.handle_commands();
+
+        self.titlebar.show(ctx);
 
         egui::TopBottomPanel::bottom("bottom").show(ctx, |ui| {
             ui.with_layout(egui::Layout::right_to_left(egui::Align::LEFT), |ui| {

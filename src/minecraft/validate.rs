@@ -15,8 +15,8 @@ pub fn is_valid_files() -> Result<bool, Box<dyn Error>> {
     let checksum =
         checksumdir::checksumdir(path.to_str().ok_or("Couldn't convert PathBuf to str.")?)?;
     let resp = reqwest::blocking::get(format!("{}/checksum", URL))?
-    .text()
-    .unwrap_or_default();
+        .text()
+        .unwrap_or_default();
     debug!(target: VALIDATOR, "Local hash: {checksum} | Server hash: {resp}");
 
     if resp != checksum {

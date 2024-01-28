@@ -11,17 +11,21 @@ use crate::{
     utils::constants::CAPTION,
 };
 
+use super::titlebar::TitleBar;
+
 const UPDATE: &str = "UPDATESCREEN";
 
 #[derive(Default)]
 pub struct UpdateScreen {
     data_receiver: Option<Receiver<Command>>,
+    titlebar: TitleBar,
 }
 
 impl UpdateScreen {
     pub fn new(data_receiver: Receiver<Command>) -> Self {
         Self {
             data_receiver: Some(data_receiver),
+            titlebar: TitleBar::new("Updating launcher").with_closable(false).with_resizable(false),
         }
     }
 
@@ -57,7 +61,8 @@ impl UpdateScreen {
         let options = eframe::NativeOptions {
             viewport: egui::ViewportBuilder::default()
                 .with_inner_size([640.0, 50.0])
-                .with_resizable(false),
+                .with_resizable(false)
+                .with_decorations(false),
             ..Default::default()
         };
 
@@ -113,6 +118,8 @@ impl eframe::App for UpdateScreen {
                 }
             }
         }
+
+        self.titlebar.show(ctx);
 
         CentralPanel::default().show(ctx, |ui| {
             if is_checking {

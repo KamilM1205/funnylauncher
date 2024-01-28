@@ -12,6 +12,7 @@ use self::main_screen::MainScreen;
 
 pub mod main_screen;
 pub mod message_screen;
+pub mod titlebar;
 pub mod update_screen;
 
 pub struct GUI {

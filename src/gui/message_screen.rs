@@ -1,5 +1,3 @@
-
-
 #[derive(Clone, Copy, Default)]
 pub enum MsgLevel {
     #[default]
