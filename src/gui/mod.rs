@@ -12,7 +12,7 @@ use self::main_screen::MainScreen;
 
 pub mod main_screen;
 pub mod message_screen;
-pub mod titlebar;
+pub mod window_frame;
 pub mod update_screen;
 
 pub struct GUI {
@@ -30,7 +30,9 @@ impl GUI {
 
     pub fn run(&mut self, launcher_receiver: Receiver<Command>) -> Result<(), eframe::Error> {
         let options = eframe::NativeOptions {
-            viewport: egui::ViewportBuilder::default().with_inner_size([640.0, 480.0]),
+            viewport: egui::ViewportBuilder::default()
+                .with_inner_size([640.0, 480.0])
+                .with_decorations(false),
             ..Default::default()
         };
 

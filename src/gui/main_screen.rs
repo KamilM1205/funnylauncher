@@ -3,12 +3,12 @@ use std::sync::{
     Arc, Mutex,
 };
 
-use egui::ProgressBar;
+use egui::{ProgressBar, Ui};
 use log::{debug, error};
 
 use crate::launcher::commands::Command;
 
-use super::{message_screen::MsgBoxScreen, titlebar::TitleBar};
+use super::{message_screen::MsgBoxScreen, window_frame::WindowFrame};
 
 const MAINSCREEN: &str = "MAINSCREEN";
 
@@ -26,7 +26,7 @@ pub struct MainScreen {
     text: String,
     progress: f32,
     error_msg: MsgBoxScreen,
-    titlebar: TitleBar,
+    wframe: WindowFrame,
 }
 
 impl MainScreen {
@@ -43,7 +43,7 @@ impl MainScreen {
             text: String::from("Готов к запуску"),
             progress: 1.0,
             error_msg: MsgBoxScreen::default(),
-            titlebar: TitleBar::new("FunnyLauncher"),
+            wframe: WindowFrame::new("FunnyLauncher"),
         }
     }
 
@@ -121,7 +121,8 @@ impl MainScreen {
 
 impl eframe::App for MainScreen {
     fn update(&mut self, ctx: &egui::Context, _: &mut eframe::Frame) {
-        if ctx.input(|i| i.viewport().close_requested()) {
+        self.wframe.show(ctx, |ui| {
+           if ui.ctx().input(|i| i.viewport().close_requested()) {
             match self.logic_sender.send(Command::EXIT) {
                 Ok(_) => (),
                 Err(_) => {
@@ -132,9 +133,7 @@ impl eframe::App for MainScreen {
 
         self.handle_commands();
 
-        self.titlebar.show(ctx);
-
-        egui::TopBottomPanel::bottom("bottom").show(ctx, |ui| {
+        egui::TopBottomPanel::bottom("bottom").show_inside(ui, |ui| {
             ui.with_layout(egui::Layout::right_to_left(egui::Align::LEFT), |ui| {
                 let in_game_guard = match self.in_game.lock() {
                     Ok(g) => g,
@@ -185,13 +184,14 @@ impl eframe::App for MainScreen {
             });
         });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show_inside(ui, |ui| {
             ui.label("Some news will be here");
         });
 
         // Modal messages
-        self.error_msg.show(ctx);
+        self.error_msg.show(ui.ctx());
 
-        ctx.request_repaint();
+        ui.ctx().request_repaint(); 
+        });
     }
 }

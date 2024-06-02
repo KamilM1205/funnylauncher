@@ -22,10 +22,10 @@ impl LauncherController {
         let in_game = Arc::new(Mutex::new(false));
         let in_game_thread = Arc::clone(&in_game);
 
-        let (logic_sender, logic_receiver) = channel::<Command>();
+        let (logic_sender, logic_receiver) = channel::<Command>();        let (launcher_sender, launcher_receiver) = channel::<Command>();
+
         let logic_sender_thread = logic_sender.clone();
 
-        let (launcher_sender, launcher_receiver) = channel::<Command>();
         let launcher_sender_thread = launcher_sender.clone();
 
         let logic_thread = std::thread::spawn(move || loop {

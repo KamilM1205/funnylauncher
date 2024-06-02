@@ -1,3 +1,7 @@
+use std::fs;
+
+use crate::minecraft::minecraft_json::{Library, MinecraftJson};
+
 #[test]
 fn load_forge_json_test() {
     let data = fs::read_to_string("tests_file/1.16.5-forge-36.2.34.json").unwrap();

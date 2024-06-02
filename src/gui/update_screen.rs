@@ -3,7 +3,7 @@ use std::{
     sync::mpsc::{channel, Receiver},
 };
 
-use egui::{CentralPanel, ProgressBar, Style, Visuals};
+use egui::{CentralPanel, ProgressBar, Style, Ui, Visuals};
 use log::{debug, error};
 
 use crate::{
@@ -11,21 +11,23 @@ use crate::{
     utils::constants::CAPTION,
 };
 
-use super::titlebar::TitleBar;
+use super::window_frame::WindowFrame;
 
 const UPDATE: &str = "UPDATESCREEN";
 
 #[derive(Default)]
 pub struct UpdateScreen {
     data_receiver: Option<Receiver<Command>>,
-    titlebar: TitleBar,
+    wframe: WindowFrame,
 }
 
 impl UpdateScreen {
     pub fn new(data_receiver: Receiver<Command>) -> Self {
         Self {
             data_receiver: Some(data_receiver),
-            titlebar: TitleBar::new("Updating launcher").with_closable(false).with_resizable(false),
+            wframe: WindowFrame::new("Updating launcher")
+                .with_closable(false)
+                .with_resizable(false),
         }
     }
 
@@ -95,10 +97,8 @@ impl UpdateScreen {
 
         Ok(())
     }
-}
 
-impl eframe::App for UpdateScreen {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn draw_contents(&self, ui: &mut Ui) {
         let mut data = UpdateData {
             downloaded: 0,
             size: 100,
@@ -107,21 +107,19 @@ impl eframe::App for UpdateScreen {
         let mut is_checking = true;
 
         if self.data_receiver.is_some() {
-            let recv = self.data_receiver.as_mut().unwrap().try_recv();
+            let recv = self.data_receiver.as_ref().unwrap().try_recv();
             if recv.is_ok() {
                 match recv.unwrap() {
                     Command::Data(data_) => {
                         is_checking = false;
                         data = data_
                     }
-                    Command::Completed => ctx.send_viewport_cmd(egui::ViewportCommand::Close),
+                    Command::Completed => ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close),
                 }
             }
         }
 
-        self.titlebar.show(ctx);
-
-        CentralPanel::default().show(ctx, |ui| {
+        CentralPanel::default().show_inside(ui, |ui| {
             if is_checking {
                 ui.with_layout(
                     egui::Layout::centered_and_justified(egui::Direction::LeftToRight),
@@ -141,6 +139,12 @@ impl eframe::App for UpdateScreen {
             }
         });
 
-        ctx.request_repaint();
+        ui.ctx().request_repaint();
+    }
+}
+
+impl eframe::App for UpdateScreen {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        self.wframe.show(ctx, |ui| self.draw_contents(ui));
     }
 }
