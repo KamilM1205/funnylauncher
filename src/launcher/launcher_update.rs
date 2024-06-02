@@ -2,11 +2,15 @@ use std::{
     env,
     error::Error,
     fs::{rename, File},
-    sync::mpsc::Sender,
+    sync::mpsc::{Receiver, Sender},
+    time::Duration,
 };
 
 use log::{debug, error, info};
-use reqwest::header::{HeaderValue, RANGE};
+use reqwest::{
+    blocking,
+    header::{HeaderValue, RANGE},
+};
 
 use crate::utils::constants::{URL, VERSION};
 
@@ -23,6 +27,7 @@ pub struct UpdateData {
 pub enum Command {
     Data(UpdateData),
     Completed,
+    Abort,
 }
 
 struct PartialRangeIter {
@@ -67,7 +72,9 @@ pub fn download_launcher(data_sender: Sender<Command>) -> Result<(), Box<dyn std
     const CHUNK_SIZE: u32 = 100 * 1024;
     let url = format!("{}/get_launcher", URL);
 
-    let client = reqwest::blocking::Client::new();
+    let client = reqwest::blocking::Client::builder()
+        .timeout(Duration::from_millis(1500))
+        .build()?;
     let res = match client.get(&url).send() {
         Ok(r) => Ok(r),
         Err(e) => {
@@ -177,7 +184,12 @@ pub fn download_launcher(data_sender: Sender<Command>) -> Result<(), Box<dyn std
 
 pub fn need_update() -> Result<bool, Box<dyn std::error::Error>> {
     info!(target: UPDATE, "Checking for launcher update...");
-    let resp = match reqwest::blocking::get(format!("{}/version", URL)) {
+
+    let client = blocking::Client::builder()
+        .timeout(Duration::from_millis(1500))
+        .build()?;
+
+    let resp = match client.get(format!("{}/version", URL)).send() {
         Ok(r) => Ok(r),
         Err(e) => {
             error!(target: UPDATE, "Error while \"version\" request: {e}");

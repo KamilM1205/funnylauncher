@@ -5,39 +5,43 @@ use std::{
 
 use egui::{CentralPanel, ProgressBar, Style, Ui, Visuals};
 use log::{debug, error};
+use log4rs::append::console::Target;
 
 use crate::{
     launcher::launcher_update::{download_launcher, need_update, Command, UpdateData},
     utils::constants::CAPTION,
 };
 
-use super::window_frame::WindowFrame;
+use super::window_frame::{windowframe, WindowFrameData};
 
 const UPDATE: &str = "UPDATESCREEN";
 
 #[derive(Default)]
 pub struct UpdateScreen {
     data_receiver: Option<Receiver<Command>>,
-    wframe: WindowFrame,
+    wframe: WindowFrameData,
 }
 
 impl UpdateScreen {
     pub fn new(data_receiver: Receiver<Command>) -> Self {
         Self {
             data_receiver: Some(data_receiver),
-            wframe: WindowFrame::new("Updating launcher")
+            wframe: WindowFrameData::new("Updating launcher")
                 .with_closable(false)
-                .with_resizable(false),
+                .with_resizable(false)
+                .with_minimaizable(false)
+                .with_movable(false),
         }
     }
 
     pub fn run(&mut self) -> Result<(), Box<dyn Any + Send>> {
         let (data_sender, data_receiver) = channel::<Command>();
+        let data_sender_thread = data_sender.clone();
 
         let update_thread = std::thread::spawn(move || {
             // Update
             if !need_update().unwrap_or(false) {
-                data_sender.send(Command::Completed).unwrap_or_else(|_| {
+                data_sender_thread.send(Command::Completed).unwrap_or_else(|_| {
                     error!(target: UPDATE, "Error while send \"Completed\" command to control thread.");
                     msgbox::create("Fatal error", &format!("Error while send \"Completed\" command to control thread."), msgbox::IconType::Error)
                     .unwrap_or_else(|e| {
@@ -48,7 +52,7 @@ impl UpdateScreen {
                 return;
             }
 
-            download_launcher(data_sender).unwrap_or_else(|e| {
+            download_launcher(data_sender_thread).unwrap_or_else(|e| {
                 error!(target: UPDATE, "{e}");
                 msgbox::create("Error", &e.to_string(), msgbox::IconType::Error).unwrap_or_else(
                     |e| {
@@ -62,7 +66,7 @@ impl UpdateScreen {
         // GUI
         let options = eframe::NativeOptions {
             viewport: egui::ViewportBuilder::default()
-                .with_inner_size([640.0, 50.0])
+                .with_inner_size([640.0, 70.0])
                 .with_resizable(false)
                 .with_decorations(false),
             ..Default::default()
@@ -115,6 +119,7 @@ impl UpdateScreen {
                         data = data_
                     }
                     Command::Completed => ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close),
+                    Command::Abort => ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close),
                 }
             }
         }
@@ -145,6 +150,6 @@ impl UpdateScreen {
 
 impl eframe::App for UpdateScreen {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        self.wframe.show(ctx, |ui| self.draw_contents(ui));
+        windowframe::show(&self.wframe, ctx, |ui| self.draw_contents(ui));
     }
 }

@@ -8,7 +8,10 @@ use log::{debug, error};
 
 use crate::launcher::commands::Command;
 
-use super::{message_screen::MsgBoxScreen, window_frame::WindowFrame};
+use super::{
+    message_screen::MsgBoxScreen,
+    window_frame::{self, windowframe, WindowFrameData},
+};
 
 const MAINSCREEN: &str = "MAINSCREEN";
 
@@ -26,7 +29,7 @@ pub struct MainScreen {
     text: String,
     progress: f32,
     error_msg: MsgBoxScreen,
-    wframe: WindowFrame,
+    wframe: WindowFrameData,
 }
 
 impl MainScreen {
@@ -43,7 +46,7 @@ impl MainScreen {
             text: String::from("Готов к запуску"),
             progress: 1.0,
             error_msg: MsgBoxScreen::default(),
-            wframe: WindowFrame::new("FunnyLauncher"),
+            wframe: WindowFrameData::new("FunnyLauncher"),
         }
     }
 
@@ -121,77 +124,79 @@ impl MainScreen {
 
 impl eframe::App for MainScreen {
     fn update(&mut self, ctx: &egui::Context, _: &mut eframe::Frame) {
-        self.wframe.show(ctx, |ui| {
-           if ui.ctx().input(|i| i.viewport().close_requested()) {
-            match self.logic_sender.send(Command::EXIT) {
-                Ok(_) => (),
-                Err(_) => {
-                    error!(target: MAINSCREEN, "Error while send \"Exit\" command to control thread.")
-                }
-            };
-        }
-
-        self.handle_commands();
-
-        egui::TopBottomPanel::bottom("bottom").show_inside(ui, |ui| {
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::LEFT), |ui| {
-                let in_game_guard = match self.in_game.lock() {
-                    Ok(g) => g,
-                    Err(e) => {
-                        error!(target: MAINSCREEN, "Couldn't lock game mutex: {e}");
-                        match msgbox::create(
-                            "Fatal error",
-                            "Couldn't lock game mutex",
-                            msgbox::IconType::Error,
-                        ) {
-                            Ok(_) => (),
-                            Err(e) => error!(target: MAINSCREEN, "Couldn't show msgbox: {e}"),
-                        };
-                        panic!("{e}");
+        windowframe::show(&self.wframe.clone(), ctx, |ui| {
+            if ui.ctx().input(|i| i.viewport().close_requested()) {
+                match self.logic_sender.send(Command::EXIT) {
+                    Ok(_) => (),
+                    Err(_) => {
+                        error!(target: MAINSCREEN, "Error while send \"Exit\" command to control thread.")
                     }
                 };
+            }
 
-                if ui
-                    .add_enabled(!*in_game_guard, egui::Button::new("Play"))
-                    .clicked()
-                {
-                    match self.logic_sender.send(Command::RUN) {
-                        Ok(()) => (),
-                        Err(_) => {
-                            error!(target: MAINSCREEN, "Couldn't send \"RUN\" command.");
+            self.handle_commands();
+
+            egui::TopBottomPanel::bottom("bottom").show_inside(ui, |ui| {
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::LEFT), |ui| {
+                    let in_game_guard = match self.in_game.lock() {
+                        Ok(g) => g,
+                        Err(e) => {
+                            error!(target: MAINSCREEN, "Couldn't lock game mutex: {e}");
                             match msgbox::create(
-                                "Error",
-                                "Couldn't send command to run game.",
+                                "Fatal error",
+                                "Couldn't lock game mutex",
                                 msgbox::IconType::Error,
                             ) {
                                 Ok(_) => (),
                                 Err(e) => error!(target: MAINSCREEN, "Couldn't show msgbox: {e}"),
                             };
+                            panic!("{e}");
                         }
                     };
-                }
 
-                if self.state == State::Idle {
-                    ui.with_layout(egui::Layout::left_to_right(egui::Align::LEFT), |ui| {
-                        ui.label(&self.text);
-                    });
-                } else {
-                    let progress = ProgressBar::new(self.progress)
-                        .show_percentage()
-                        .text(&self.text);
-                    ui.add(progress);
-                }
+                    if ui
+                        .add_enabled(!*in_game_guard, egui::Button::new("Play"))
+                        .clicked()
+                    {
+                        match self.logic_sender.send(Command::RUN) {
+                            Ok(()) => (),
+                            Err(_) => {
+                                error!(target: MAINSCREEN, "Couldn't send \"RUN\" command.");
+                                match msgbox::create(
+                                    "Error",
+                                    "Couldn't send command to run game.",
+                                    msgbox::IconType::Error,
+                                ) {
+                                    Ok(_) => (),
+                                    Err(e) => {
+                                        error!(target: MAINSCREEN, "Couldn't show msgbox: {e}")
+                                    }
+                                };
+                            }
+                        };
+                    }
+
+                    if self.state == State::Idle {
+                        ui.with_layout(egui::Layout::left_to_right(egui::Align::LEFT), |ui| {
+                            ui.label(&self.text);
+                        });
+                    } else {
+                        let progress = ProgressBar::new(self.progress)
+                            .show_percentage()
+                            .text(&self.text);
+                        ui.add(progress);
+                    }
+                });
             });
-        });
 
-        egui::CentralPanel::default().show_inside(ui, |ui| {
-            ui.label("Some news will be here");
-        });
+            egui::CentralPanel::default().show_inside(ui, |ui| {
+                ui.label("Some news will be here");
+            });
 
-        // Modal messages
-        self.error_msg.show(ui.ctx());
+            // Modal messages
+            self.error_msg.show(ui.ctx());
 
-        ui.ctx().request_repaint(); 
+            ui.ctx().request_repaint();
         });
     }
 }
