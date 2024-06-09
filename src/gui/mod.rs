@@ -1,6 +1,7 @@
 use crate::launcher::commands::Command;
 use egui::{Style, Visuals};
 use log::debug;
+use serde_json::Value;
 use std::sync::{
     mpsc::{Receiver, Sender},
     Arc, Mutex,
@@ -12,17 +13,19 @@ use self::main_screen::MainScreen;
 
 pub mod main_screen;
 pub mod message_screen;
-pub mod window_frame;
 pub mod update_screen;
+pub mod window_frame;
 
 pub struct GUI {
+    locale: Value,
     logic_sender: Sender<Command>,
     in_game: Arc<Mutex<bool>>,
 }
 
 impl GUI {
-    pub fn new(logic_sender: Sender<Command>, in_game: Arc<Mutex<bool>>) -> Self {
+    pub fn new(locale: Value, logic_sender: Sender<Command>, in_game: Arc<Mutex<bool>>) -> Self {
         Self {
+            locale,
             logic_sender,
             in_game,
         }
@@ -38,6 +41,7 @@ impl GUI {
 
         let logic_sender = self.logic_sender.clone();
         let in_game = self.in_game.clone();
+        let locale = self.locale.clone();
 
         debug!("Starting main screen.");
 
@@ -51,7 +55,12 @@ impl GUI {
                 };
                 cc.egui_ctx.set_style(style);
 
-                Box::new(MainScreen::new(logic_sender, in_game, launcher_receiver))
+                Box::new(MainScreen::new(
+                    locale,
+                    logic_sender,
+                    in_game,
+                    launcher_receiver,
+                ))
             }),
         )?;
 

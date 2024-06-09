@@ -3,7 +3,8 @@
 use std::process::exit;
 
 use funnylauncher::{
-    gui::update_screen::UpdateScreen, launcher::launcher_controller::LauncherController,
+    gui::update_screen::UpdateScreen,
+    launcher::{config::AppConfig, launcher_controller::LauncherController, locale::Locale},
     utils::log::init_logger,
 };
 use log::{error, info};
@@ -21,8 +22,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("Starting launcher...");
 
+    info!("Loading configuration...");
+
+    let config = AppConfig::get_config().unwrap_or_else(|e| {
+        error!("{e}");
+        msgbox::create("Fatal error", &e, msgbox::IconType::Error).unwrap();
+        exit(-1);
+    });
+
+    info!("Configuration load complete.");
+
+    info!("Loading locale: \"{}\"...", config.locale);
+
+    let locale = Locale::load(&config.locale);
+
+    info!("Locale load complete.");
+
     let mut update_screen = UpdateScreen::default();
-    update_screen.run().unwrap_or_else(|e| {
+    update_screen.run(locale.clone()).unwrap_or_else(|e| {
         error!("{:?}", e);
         msgbox::create(
             "Fatal error",
@@ -33,7 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         exit(-1);
     });
 
-    let mut launcher_controller = LauncherController::new();
+    let mut launcher_controller = LauncherController::new(locale);
     launcher_controller.run().unwrap_or_else(|e| {
         error!("{:?}", e);
         msgbox::create(

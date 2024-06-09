@@ -3,14 +3,15 @@ use std::sync::{
     Arc, Mutex,
 };
 
-use egui::{ProgressBar, Ui};
+use egui::ProgressBar;
 use log::{debug, error};
+use serde_json::Value;
 
 use crate::launcher::commands::Command;
 
 use super::{
     message_screen::MsgBoxScreen,
-    window_frame::{self, windowframe, WindowFrameData},
+    window_frame::{windowframe, WindowFrameData},
 };
 
 const MAINSCREEN: &str = "MAINSCREEN";
@@ -30,10 +31,12 @@ pub struct MainScreen {
     progress: f32,
     error_msg: MsgBoxScreen,
     wframe: WindowFrameData,
+    locale: Value,
 }
 
 impl MainScreen {
     pub fn new(
+        locale: Value,
         logic_sender: Sender<Command>,
         in_game: Arc<Mutex<bool>>,
         launcher_receiver: Receiver<Command>,
@@ -43,10 +46,11 @@ impl MainScreen {
             in_game,
             launcher_receiver,
             state: State::Idle,
-            text: String::from("Готов к запуску"),
+            text: locale["main_ready"].as_str().unwrap().to_owned(),
             progress: 1.0,
             error_msg: MsgBoxScreen::default(),
-            wframe: WindowFrameData::new("FunnyLauncher"),
+            wframe: WindowFrameData::new(locale.clone(), "FunnyLauncher"),
+            locale,
         }
     }
 
@@ -77,38 +81,43 @@ impl MainScreen {
                     debug!(target: MAINSCREEN, "RUN command.");
 
                     self.state = State::Idle;
-                    self.text = String::from("В игре")
+                    self.text = self.locale["main_run"].as_str().unwrap().to_owned()
                 }
                 Command::CONTINUE => {
                     debug!(target: MAINSCREEN, "CONTINUE command.");
 
                     self.state = State::Idle;
-                    self.text = String::from("Готов к запуску")
+                    self.text = self.locale["main_ready"].as_str().unwrap().to_owned()
                 }
                 Command::VALIDATE => {
                     debug!(target: MAINSCREEN, "VALIDATE command.");
 
                     self.state = State::Updating;
-                    self.text = String::from("Проверка файлов")
+                    self.text = self.locale["main_check"].as_str().unwrap().to_owned()
                 }
                 Command::DOWNLOAD((downloaded, size)) => {
                     debug!(target: MAINSCREEN, "DOWNLOAD command.");
 
                     self.state = State::Updating;
-                    self.text = format!("{}Mb/{}Mb", downloaded / (1024 * 2), size / (1024 * 2));
+                    self.text = format!(
+                        "{} {}Mb/{}Mb",
+                        self.locale["main_download"].as_str().unwrap(),
+                        downloaded / (1024 * 2),
+                        size / (1024 * 2)
+                    );
                     self.progress = downloaded as f32 / size as f32;
                 }
                 Command::UNZIPING => {
                     debug!(target: MAINSCREEN, "UNZIPING command.");
 
                     self.state = State::Updating;
-                    self.text = String::from("Распаковка игры...")
+                    self.text = self.locale["main_unpack"].as_str().unwrap().to_owned()
                 }
                 Command::PLAY => {
                     debug!(target: MAINSCREEN, "PLAY command.");
 
                     self.state = State::Idle;
-                    self.text = String::from("В игре")
+                    self.text = self.locale["main_run"].to_string().to_owned()
                 }
                 Command::ERROR(e) => {
                     debug!(target: MAINSCREEN, "ERROR command.");
@@ -155,7 +164,10 @@ impl eframe::App for MainScreen {
                     };
 
                     if ui
-                        .add_enabled(!*in_game_guard, egui::Button::new("Play"))
+                        .add_enabled(
+                            !*in_game_guard,
+                            egui::Button::new(self.locale["main_btn_play"].as_str().unwrap()),
+                        )
                         .clicked()
                     {
                         match self.logic_sender.send(Command::RUN) {

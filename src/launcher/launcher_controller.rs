@@ -1,4 +1,5 @@
 use log::{debug, error};
+use serde_json::Value;
 
 use crate::launcher::commands::Command;
 use crate::minecraft;
@@ -11,18 +12,21 @@ use std::{any::Any, sync::mpsc::channel};
 
 const CONTROLLER: &str = "LAUNCHERCONTROLLER";
 
-pub struct LauncherController {}
+pub struct LauncherController {
+    locale: Value,
+}
 
 impl LauncherController {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(locale: Value) -> Self {
+        Self { locale }
     }
 
     pub fn run(&mut self) -> Result<(), Box<dyn Any + Send>> {
         let in_game = Arc::new(Mutex::new(false));
         let in_game_thread = Arc::clone(&in_game);
 
-        let (logic_sender, logic_receiver) = channel::<Command>();        let (launcher_sender, launcher_receiver) = channel::<Command>();
+        let (logic_sender, logic_receiver) = channel::<Command>();
+        let (launcher_sender, launcher_receiver) = channel::<Command>();
 
         let logic_sender_thread = logic_sender.clone();
 
@@ -133,7 +137,7 @@ impl LauncherController {
             }
         });
 
-        let mut gui = GUI::new(logic_sender.clone(), in_game);
+        let mut gui = GUI::new(self.locale.clone(), logic_sender.clone(), in_game);
         match gui.run(launcher_receiver) {
             Ok(_) => (),
             Err(e) => {

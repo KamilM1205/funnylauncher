@@ -5,7 +5,7 @@ use std::{
 
 use egui::{CentralPanel, ProgressBar, Style, Ui, Visuals};
 use log::{debug, error};
-use log4rs::append::console::Target;
+use serde_json::Value;
 
 use crate::{
     launcher::launcher_update::{download_launcher, need_update, Command, UpdateData},
@@ -20,21 +20,23 @@ const UPDATE: &str = "UPDATESCREEN";
 pub struct UpdateScreen {
     data_receiver: Option<Receiver<Command>>,
     wframe: WindowFrameData,
+    locale: Value,
 }
 
 impl UpdateScreen {
-    pub fn new(data_receiver: Receiver<Command>) -> Self {
+    pub fn new(locale: Value, data_receiver: Receiver<Command>) -> Self {
         Self {
             data_receiver: Some(data_receiver),
-            wframe: WindowFrameData::new("Updating launcher")
+            wframe: WindowFrameData::new(locale.clone(), locale["update_title"].as_str().unwrap())
                 .with_closable(false)
                 .with_resizable(false)
                 .with_minimaizable(false)
                 .with_movable(false),
+            locale,
         }
     }
 
-    pub fn run(&mut self) -> Result<(), Box<dyn Any + Send>> {
+    pub fn run(&mut self, locale: Value) -> Result<(), Box<dyn Any + Send>> {
         let (data_sender, data_receiver) = channel::<Command>();
         let data_sender_thread = data_sender.clone();
 
@@ -86,7 +88,7 @@ impl UpdateScreen {
 
                 egui::ViewportCommand::center_on_screen(&cc.egui_ctx);
 
-                Box::new(Self::new(data_receiver))
+                Box::new(Self::new(locale, data_receiver))
             }),
         )
         .unwrap();
@@ -129,11 +131,11 @@ impl UpdateScreen {
                 ui.with_layout(
                     egui::Layout::centered_and_justified(egui::Direction::LeftToRight),
                     |ui| {
-                        ui.label("Checking for update...");
+                        ui.label(self.locale["update_label_check"].as_str().unwrap());
                     },
                 );
             } else {
-                ui.label("Обновление");
+                ui.label(self.locale["update_label_update"].as_str().unwrap());
                 let progress =
                     ProgressBar::new(data.downloaded as f32 / data.size as f32).text(format!(
                         "{}Mb/{}Mb",

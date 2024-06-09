@@ -1,0 +1,17 @@
+{
+  "_comment": "Update section",
+  "update_title": "Updating launcher",
+  "update_label_check": "Checking for update...",
+  "update_label_update": "Updating",
+  "_comment": "MainScreen section",
+  "main_ready": "Ready to launch",
+  "main_run": "In game",
+  "main_check": "File checking",
+  "main_download": "Downloading:",
+  "main_unpack": "Unpacking game...",
+  "main_btn_play": "Play",
+  "_comment": "Titlebar section",
+  "titlebar_close": "Close launcher",
+  "titlebar_maximize": "Maximize window",
+  "titlebar_minimize": "Minimize window"
+}

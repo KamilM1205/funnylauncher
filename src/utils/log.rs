@@ -10,13 +10,13 @@ use log4rs::{
     init_config, Config,
 };
 
-use super::constants::WORKING_DIR;
+use super::constants::LAUNCHER_DIR;
 
 pub fn init_logger() -> Result<(), Box<dyn Error>> {
     let level = log::LevelFilter::Debug;
     let file_path = dirs::data_dir()
         .ok_or("Data dir not found.")?
-        .join(WORKING_DIR)
+        .join(LAUNCHER_DIR)
         .join("funnylauncher.log");
 
     // Building stdout logger
@@ -27,6 +27,7 @@ pub fn init_logger() -> Result<(), Box<dyn Error>> {
 
     // Logging to log file
     let logfile = FileAppender::builder()
+        .append(false)
         .encoder(Box::new(PatternEncoder::new(
             "{d} {h([{l}])}(({t})) - {m}{n}",
         )))

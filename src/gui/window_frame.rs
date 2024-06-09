@@ -1,3 +1,5 @@
+use serde_json::Value;
+
 #[derive(Default, Clone)]
 pub struct WindowFrameData {
     title: String,
@@ -5,16 +7,18 @@ pub struct WindowFrameData {
     resizable: bool,
     minimaizable: bool,
     movable: bool,
+    locale: Value,
 }
 
 impl WindowFrameData {
-    pub fn new(title: impl Into<String>) -> Self {
+    pub fn new(locale: Value, title: impl Into<String>) -> Self {
         Self {
             title: title.into(),
             closable: true,
             resizable: true,
             minimaizable: true,
             movable: true,
+            locale,
         }
     }
 
@@ -132,7 +136,7 @@ pub mod windowframe {
         if data.closable {
             let close_responce = ui
                 .add(Button::new(RichText::new("X").size(button_height)))
-                .on_hover_text("Close launcher");
+                .on_hover_text(data.locale["titlebar_close"].as_str().unwrap());
 
             if close_responce.clicked() {
                 ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
@@ -144,7 +148,7 @@ pub mod windowframe {
 
             let maximized_response = ui
                 .add(Button::new(RichText::new("🗗").size(button_height)))
-                .on_hover_text("Maximize window");
+                .on_hover_text(data.locale["titlebar_maximize"].as_str().unwrap());
 
             if maximized_response.clicked() {
                 ui.ctx()
@@ -155,7 +159,7 @@ pub mod windowframe {
         if data.minimaizable {
             let minimized_response = ui
                 .add(Button::new(RichText::new("-").size(button_height)))
-                .on_hover_text("Minimize window");
+                .on_hover_text(data.locale["titlebar_minimize"].as_str().unwrap());
 
             if minimized_response.clicked() {
                 ui.ctx()

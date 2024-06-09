@@ -1,0 +1,17 @@
+{
+  "_comment": "Update section",
+  "update_title": "Обновление лаунчера",
+  "update_label_check": "Проверка обновления...",
+  "update_label_update": "Обновление",
+  "_comment": "MainScreen section",
+  "main_ready": "Готов к запуску",
+  "main_run": "В игре",
+  "main_check": "Проверка файлов игры",
+  "main_download": "Загрузка:",
+  "main_unpack": "Распаковка игры...",
+  "main_btn_play": "Играть",
+  "_comment": "Titlebar section",
+  "titlebar_close": "Выйти из лаунчера",
+  "titlebar_maximize": "На весь экран",
+  "titlebar_minimize": "Свернуть"
+}

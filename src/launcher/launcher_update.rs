@@ -2,7 +2,7 @@ use std::{
     env,
     error::Error,
     fs::{rename, File},
-    sync::mpsc::{Receiver, Sender},
+    sync::mpsc::Sender,
     time::Duration,
 };
 
