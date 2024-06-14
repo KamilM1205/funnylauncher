@@ -3,9 +3,11 @@ use std::{
     io::{Read, Write},
 };
 
-use log::warn;
+use log::{error, warn};
 use serde::{Deserialize, Serialize};
 use sys_locale::get_locale;
+
+use crate::utils::constants::LAUNCHER_DIR;
 
 #[derive(Serialize, Deserialize)]
 pub struct AppConfig {
@@ -35,7 +37,7 @@ impl AppConfig {
             return Err(err.to_string());
         }
 
-        let mut path = path.unwrap().join(".funnylauncher");
+        let mut path = path.unwrap().join(LAUNCHER_DIR);
 
         if !path.exists() {
             if let Err(e) = fs::create_dir_all(&path) {
@@ -80,5 +82,48 @@ impl AppConfig {
         config = serde_json::from_str(&data).unwrap();
 
         Ok(config)
+    }
+
+    pub fn save(&self) {
+        let mut file: File;
+        let mut data: String = String::new();
+        let path = dirs::data_dir();
+
+        if let None = path {
+            let err = "Data directorie not found.";
+            error!("{}", err);
+            msgbox::create("Error", &err, msgbox::IconType::Error).unwrap();
+        }
+
+        let mut path = path.unwrap().join(LAUNCHER_DIR);
+
+        if !path.exists() {
+            if let Err(e) = fs::create_dir_all(&path) {
+                let err = format!("Couldn't create directories to config file. Error: {e}");
+
+                error!("{}", err);
+                msgbox::create("Error", &err, msgbox::IconType::Error).unwrap();
+            };
+        }
+
+        path = path.join("config.json");
+
+        file = match File::create(&path) {
+            Ok(file) => file,
+            Err(e) => {
+                let err = format!("Couldn't create config file. Error: {e}");
+
+                error!("{}", err);
+                msgbox::create("Error", &err, msgbox::IconType::Error).unwrap();
+                return;
+            }
+        };
+
+        if let Err(e) = file.write(&serde_json::to_string(&self).unwrap().as_bytes()) {
+            let err = format!("Couldn't write config to file. Error: {e}");
+
+            error!("{}", err);
+            msgbox::create("Error", &err, msgbox::IconType::Error).unwrap();
+        }
     }
 }

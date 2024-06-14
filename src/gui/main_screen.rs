@@ -3,7 +3,7 @@ use std::sync::{
     Arc, Mutex,
 };
 
-use egui::ProgressBar;
+use egui::{Image, ProgressBar};
 use log::{debug, error};
 use serde_json::Value;
 
@@ -11,6 +11,7 @@ use crate::launcher::commands::Command;
 
 use super::{
     message_screen::MsgBoxScreen,
+    settings_modal::SettingsModal,
     window_frame::{windowframe, WindowFrameData},
 };
 
@@ -26,6 +27,7 @@ pub struct MainScreen {
     logic_sender: Sender<Command>,
     launcher_receiver: Receiver<Command>,
     in_game: Arc<Mutex<bool>>,
+    settings_modal: SettingsModal,
     state: State,
     text: String,
     progress: f32,
@@ -47,6 +49,7 @@ impl MainScreen {
             launcher_receiver,
             state: State::Idle,
             text: locale["main_ready"].as_str().unwrap().to_owned(),
+            settings_modal: SettingsModal::new(locale.clone()),
             progress: 1.0,
             error_msg: MsgBoxScreen::default(),
             wframe: WindowFrameData::new(locale.clone(), "FunnyLauncher"),
@@ -163,6 +166,12 @@ impl eframe::App for MainScreen {
                         }
                     };
 
+                    let image = Image::new(egui::include_image!("../../assets/setting.png"))
+                        .max_size(egui::Vec2::new(64., 64.));
+                    if ui.add(egui::ImageButton::new(image)).clicked() {
+                        self.settings_modal.is_open = true;
+                    }
+
                     if ui
                         .add_enabled(
                             !*in_game_guard,
@@ -207,6 +216,7 @@ impl eframe::App for MainScreen {
 
             // Modal messages
             self.error_msg.show(ui.ctx());
+            self.settings_modal.show(ctx);
 
             ui.ctx().request_repaint();
         });

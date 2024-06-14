@@ -11,8 +11,10 @@ use crate::utils::constants::CAPTION;
 
 use self::main_screen::MainScreen;
 
+pub mod login_screen;
 pub mod main_screen;
 pub mod message_screen;
+pub mod settings_modal;
 pub mod update_screen;
 pub mod window_frame;
 
@@ -54,6 +56,8 @@ impl GUI {
                     ..Style::default()
                 };
                 cc.egui_ctx.set_style(style);
+
+                egui_extras::install_image_loaders(&cc.egui_ctx);
 
                 Box::new(MainScreen::new(
                     locale,

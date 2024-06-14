@@ -20,4 +20,8 @@ impl Locale {
 
         serde_json::from_str(data).unwrap()
     }
+
+    pub fn get_list() -> Vec<String> {
+        vec!["ru-RU".to_string(), "en-US".to_string()]
+    }
 }

@@ -3,7 +3,7 @@
 use std::process::exit;
 
 use funnylauncher::{
-    gui::update_screen::UpdateScreen,
+    gui::{login_screen::LoginScreen, update_screen::UpdateScreen},
     launcher::{config::AppConfig, launcher_controller::LauncherController, locale::Locale},
     utils::log::init_logger,
 };
@@ -40,6 +40,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut update_screen = UpdateScreen::default();
     update_screen.run(locale.clone()).unwrap_or_else(|e| {
+        error!("{:?}", e);
+        msgbox::create(
+            "Fatal error",
+            &format!("Couldn't initialize update screen. Error: {:?}", e),
+            msgbox::IconType::Error,
+        )
+        .unwrap_or_else(|e| error!("{e}"));
+        exit(-1);
+    });
+
+    info!("Showing login screen.");
+
+    let login_screen = LoginScreen::new(locale.clone());
+    login_screen.run().unwrap_or_else(|e| {
         error!("{:?}", e);
         msgbox::create(
             "Fatal error",

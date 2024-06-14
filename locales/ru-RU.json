@@ -1,4 +1,5 @@
 {
+  "name": "ru-RU",
   "_comment": "Update section",
   "update_title": "Обновление лаунчера",
   "update_label_check": "Проверка обновления...",
@@ -13,5 +14,17 @@
   "_comment": "Titlebar section",
   "titlebar_close": "Выйти из лаунчера",
   "titlebar_maximize": "На весь экран",
-  "titlebar_minimize": "Свернуть"
+  "titlebar_minimize": "Свернуть",
+  "_comment": "Settings section",
+  "settings_title": "Настройки",
+  "settings_title": "Settings",
+  "settings_language": "Language:",
+  "settings_save": "Save",
+  "_comment": "Login section",
+  "login_title": "Вход",
+  "login_login": "Логин:",
+  "login_password": "Пароль:",
+  "login_error": "Логин или пароль не верные",
+  "login_register": "Нет аккаунта? Зарегистрируйтесь!",
+  "login_submit": "Войти"
 }

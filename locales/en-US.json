@@ -1,4 +1,5 @@
 {
+  "name": "en-US",
   "_comment": "Update section",
   "update_title": "Updating launcher",
   "update_label_check": "Checking for update...",
@@ -13,5 +14,16 @@
   "_comment": "Titlebar section",
   "titlebar_close": "Close launcher",
   "titlebar_maximize": "Maximize window",
-  "titlebar_minimize": "Minimize window"
+  "titlebar_minimize": "Minimize window",
+  "_comment": "Settings section",
+  "settings_title": "Settings",
+  "settings_language": "Language:",
+  "settings_save": "Save",
+  "_comment": "Login section",
+  "login_title": "Login",
+  "login_login": "Login:",
+  "login_password": "Password:",
+  "login_error": "Login or password is incorect",
+  "login_register": "Have not account? Registrate!",
+  "login_submit": "Submit"
 }
