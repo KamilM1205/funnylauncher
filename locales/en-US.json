@@ -24,6 +24,7 @@
   "login_login": "Login:",
   "login_password": "Password:",
   "login_error": "Login or password is incorect",
+  "login_is_error": "Internal server error or no internet connection",
   "login_register": "Have not account? Registrate!",
   "login_submit": "Submit"
 }

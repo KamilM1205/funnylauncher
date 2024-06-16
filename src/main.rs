@@ -52,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("Showing login screen.");
 
-    let login_screen = LoginScreen::new(locale.clone());
+    let mut login_screen = LoginScreen::new(locale.clone());
     login_screen.run().unwrap_or_else(|e| {
         error!("{:?}", e);
         msgbox::create(

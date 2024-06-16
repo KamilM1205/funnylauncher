@@ -42,7 +42,12 @@ impl UpdateScreen {
 
         let update_thread = std::thread::spawn(move || {
             // Update
-            if !need_update().unwrap_or(false) {
+            let nu = need_update().unwrap_or_else(|e| {
+                error!("{}", e);
+                false
+            });
+
+            if !nu {
                 data_sender_thread.send(Command::Completed).unwrap_or_else(|_| {
                     error!(target: UPDATE, "Error while send \"Completed\" command to control thread.");
                     msgbox::create("Fatal error", &format!("Error while send \"Completed\" command to control thread."), msgbox::IconType::Error)

@@ -58,6 +58,11 @@ pub fn download_minecraft(data_sender: Sender<Command>) -> Result<(), Box<dyn st
             Err(e)
         }
     }?;
+
+    if !res.status().is_success() {
+        return Err(format!("Server error: {}", res.status().to_string()).into())
+    }
+
     let size = match res.content_length() {
         Some(s) => Some(s),
         None => {
@@ -108,6 +113,10 @@ pub fn download_minecraft(data_sender: Sender<Command>) -> Result<(), Box<dyn st
                 Err(e)
             }
         }?;
+
+        if !response.status().is_success() {
+            return Err(format!("Server error: {}", response.status().to_string()).into())
+        }
 
         match std::io::copy(&mut response, &mut file) {
             Ok(_) => Ok(()),

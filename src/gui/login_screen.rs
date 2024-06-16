@@ -1,10 +1,13 @@
 use std::process::exit;
 
 use egui::{Color32, Layout, Style, Vec2, Visuals, WidgetText};
-use log::info;
+use log::{error, info};
 use serde_json::Value;
 
-use crate::utils::constants::{CAPTION, REGISTRATION_URL};
+use crate::{
+    api::auth::{Auth, IS_ERROR, LP_ERROR},
+    utils::constants::{CAPTION, REGISTRATION_URL},
+};
 
 use super::window_frame::{windowframe, WindowFrameData};
 
@@ -13,6 +16,8 @@ pub struct LoginScreen {
     password: String,
     wframe: WindowFrameData,
     is_error: bool,
+    api: Auth,
+    err_msg: String,
     locale: Value,
 }
 
@@ -24,10 +29,23 @@ impl LoginScreen {
             wframe: WindowFrameData::new(locale.clone(), locale["login_title"].as_str().unwrap())
                 .with_resizable(false),
             is_error: false,
+            api: Default::default(),
+            err_msg: String::new(),
             locale,
         }
     }
-    pub fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let auth = Auth::load();
+        
+        if !auth.is_err() {
+            if auth.as_ref().unwrap().token != "" {
+                info!("Token: {}", auth.unwrap().token); 
+                return Ok(())
+            }
+        } else {
+            error!("{}", auth.err().unwrap().to_string())
+        }
+
         let options = eframe::NativeOptions {
             viewport: egui::ViewportBuilder::default()
                 .with_inner_size([320.0, 140.0])
@@ -61,21 +79,29 @@ impl eframe::App for LoginScreen {
         windowframe::show(&self.wframe, ctx, |ui| {
             if ctx.input(|i| i.viewport().close_requested()) {
                 info!("Exiting from login screen.");
-                exit(0);
+                if self.api.token.is_empty() {
+                    exit(0);
+                }
             }
 
             if self.is_error {
                 let frame = egui::containers::Frame {
-                    fill: Color32::RED, ..Default::default()
-                }; 
-                
-                egui::TopBottomPanel::top("error_msg").frame(frame).show_inside(ui, |ui| {
-                    ui.horizontal_centered(|ui| {
-                        ui.vertical_centered(|ui| {
-                            ui.label(WidgetText::from(self.locale["login_error"].as_str().unwrap()).color(Color32::WHITE));
+                    fill: Color32::RED,
+                    ..Default::default()
+                };
+
+                egui::TopBottomPanel::top("error_msg")
+                    .frame(frame)
+                    .show_inside(ui, |ui| {
+                        ui.horizontal_centered(|ui| {
+                            ui.vertical_centered(|ui| {
+                                ui.label(
+                                    WidgetText::from(self.err_msg.clone())
+                                        .color(Color32::WHITE),
+                                );
+                            });
                         });
                     });
-                });
 
                 ui.separator();
             }
@@ -104,8 +130,35 @@ impl eframe::App for LoginScreen {
                     .button(self.locale["login_submit"].as_str().unwrap())
                     .clicked()
                 {
-                    self.is_error = true;
-                    ctx.send_viewport_cmd(egui::ViewportCommand::InnerSize(Vec2::new(320., 160.)));
+                    self.api.login = self.login.clone();
+                    self.api.password = self.password.clone();
+                    let resp = self.api.send();
+                    if let Ok(()) = resp {  
+                        info!("Auth token requested");
+                        if let Err(e) = self.api.save() {
+                            let err = format!("Couldn't save token. Error: {e}");
+                            error!("{}", err);
+                            msgbox::create("Error", &err, msgbox::IconType::Error).unwrap_or_else(|e| {
+                                error!("Couldn't show msgbox: {e}");
+                            });
+                        } else {
+                            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                        }
+                    } else if let Err(e) = resp {
+                        if e.to_string() == LP_ERROR.to_string() {
+                            self.err_msg = self.locale[LP_ERROR].as_str().unwrap().to_string();
+                        } else {
+                            self.err_msg = self.locale[IS_ERROR].as_str().unwrap().to_string();
+                            error!("{}", self.err_msg);
+                        }
+                        self.is_error = true;
+                    }
+
+                    if self.is_error {
+                        ctx.send_viewport_cmd(egui::ViewportCommand::InnerSize(Vec2::new(
+                            320., 160.,
+                        )));
+                    }
                 }
             });
         });
