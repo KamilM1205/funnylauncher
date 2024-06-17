@@ -1,27 +1,47 @@
+use egui::TextBuffer;
 use log::{debug, error};
 use serde_json::Value;
 
+use crate::api::account::Account;
+use crate::api::auth::Auth;
 use crate::launcher::commands::Command;
 use crate::minecraft;
 use crate::minecraft::downloader::{self, download_minecraft};
 use crate::minecraft::validate::{self, is_valid_files};
+use crate::utils::relaunch::relaunch;
 use crate::{gui::GUI, minecraft::Minecraft};
-use std::process::ExitStatus;
+use std::process::{exit, ExitStatus};
+use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
-use std::{any::Any, sync::mpsc::channel};
 
 const CONTROLLER: &str = "LAUNCHERCONTROLLER";
 
 pub struct LauncherController {
     locale: Value,
+    account: Account,
 }
 
 impl LauncherController {
-    pub fn new(locale: Value) -> Self {
-        Self { locale }
+    pub fn new(locale: Value) -> Result<Self, Box<dyn std::error::Error>> {
+        let account = Account::new()?;
+        Ok(Self { locale, account })
     }
 
-    pub fn run(&mut self) -> Result<(), Box<dyn Any + Send>> {
+    pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error + Send>> {
+        if let Err(e) = self.account.send_online() {
+            error!("Couldn't send online status. Error: {e}");
+            Auth::remove_token().unwrap_or_else(|e| {
+                error!("Couldn't remove token. Error: {e}");
+            });
+
+            relaunch().unwrap_or_else(|e| {
+                error!("Couldn't relaunch launcher. Error: {e}");
+                exit(-1);
+            });
+
+            return Ok(());
+        }
+
         let in_game = Arc::new(Mutex::new(false));
         let in_game_thread = Arc::clone(&in_game);
 
@@ -141,10 +161,10 @@ impl LauncherController {
         match gui.run(launcher_receiver) {
             Ok(_) => (),
             Err(e) => {
-                error!(target: CONTROLLER, "e");
+                error!(target: CONTROLLER, "{e}");
                 msgbox::create(
                     "Fatal error",
-                    "Error while running gui: {e}",
+                    &format!("Error while running gui: {e}"),
                     msgbox::IconType::Error,
                 )
                 .unwrap_or_else(|_| {
@@ -155,6 +175,20 @@ impl LauncherController {
         };
 
         logic_thread.join().unwrap();
+
+        if let Err(e) = self.account.send_offline() {
+            error!("Couldn't send online status. Error: {e}");
+            Auth::remove_token().unwrap_or_else(|e| {
+                error!("Couldn't remove token. Error: {e}");
+            });
+
+            relaunch().unwrap_or_else(|e| {
+                error!("Couldn't relaunch launcher. Error: {e}");
+                exit(-1);
+            });
+
+            return Ok(());
+        }
 
         Ok(())
     }

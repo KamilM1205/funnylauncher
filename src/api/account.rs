@@ -2,7 +2,6 @@ use std::{fmt::format, time::Duration};
 
 use reqwest::blocking::Client;
 use serde::Deserialize;
-use serde_json::{json, Value};
 
 use crate::utils::constants::{GET_USER_URL, UPDATE_USER_ONLINE_URL, URL};
 
@@ -29,11 +28,14 @@ impl Account {
         let client = Client::builder()
             .timeout(Duration::from_millis(1500))
             .build()?;
-        let resp = client.get(format!("{}{}", URL, GET_USER_URL)).header("Content-Type", "application/json")
-            .body(format!("{{ \"token\": {token} }}")).send()?;
+        let resp = client
+            .get(format!("{}{}", URL, GET_USER_URL))
+            .header("Content-Type", "application/json")
+            .header("Authorization", format!("Bearer {token}"))
+            .send()?;
 
         if !resp.status().is_success() {
-            return Err("Not authorized".into());
+            return Err(format!("Not authorized. {}", resp.status().to_string()).into());
         }
 
         let mut ret = serde_json::from_str::<Self>(&resp.text()?)?;
@@ -42,15 +44,19 @@ impl Account {
 
         Ok(ret)
     }
-    
+
     fn update_online(&mut self, online: bool) -> Result<(), Box<dyn std::error::Error>> {
         self.is_online = online;
-        self.client.patch(format!("{}{}", URL, UPDATE_USER_ONLINE_URL))
+        self.client
+            .patch(format!("{}{}", URL, UPDATE_USER_ONLINE_URL))
             .header("Content-Type", "application/json")
-            .body(format!(r#"{{
-                "token": {},
+            .header("Authorization", format!("Bearer {}", self.token))
+            .body(format!(
+                r#"{{
                 "status": {}
-            }}"#, self.token, self.status))
+            }}"#,
+                self.status
+            ))
             .send()?;
 
         Ok(())
@@ -60,7 +66,7 @@ impl Account {
         self.update_online(true)
     }
 
-    pub fn send_ofline(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn send_offline(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         self.update_online(false)
     }
 }

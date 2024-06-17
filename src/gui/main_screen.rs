@@ -11,6 +11,7 @@ use crate::launcher::commands::Command;
 
 use super::{
     message_screen::MsgBoxScreen,
+    news_widget::NewsWidget,
     settings_modal::SettingsModal,
     window_frame::{windowframe, WindowFrameData},
 };
@@ -34,6 +35,7 @@ pub struct MainScreen {
     error_msg: MsgBoxScreen,
     wframe: WindowFrameData,
     locale: Value,
+    news: NewsWidget,
 }
 
 impl MainScreen {
@@ -42,8 +44,8 @@ impl MainScreen {
         logic_sender: Sender<Command>,
         in_game: Arc<Mutex<bool>>,
         launcher_receiver: Receiver<Command>,
-    ) -> Self {
-        Self {
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Self {
             logic_sender,
             in_game,
             launcher_receiver,
@@ -53,8 +55,9 @@ impl MainScreen {
             progress: 1.0,
             error_msg: MsgBoxScreen::default(),
             wframe: WindowFrameData::new(locale.clone(), "FunnyLauncher"),
+            news: NewsWidget::new(locale.clone())?,
             locale,
-        }
+        })
     }
 
     fn handle_commands(&mut self) {
@@ -211,12 +214,15 @@ impl eframe::App for MainScreen {
             });
 
             egui::CentralPanel::default().show_inside(ui, |ui| {
-                ui.label("Some news will be here");
+                ui.with_layout(egui::Layout::top_down_justified(egui::Align::Min), |ui| {
+                    self.news.draw(ui);
+                });
             });
 
             // Modal messages
             self.error_msg.show(ui.ctx());
             self.settings_modal.show(ctx);
+            self.news.show_modal(ui);
 
             ui.ctx().request_repaint();
         });

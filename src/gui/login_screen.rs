@@ -36,11 +36,11 @@ impl LoginScreen {
     }
     pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let auth = Auth::load();
-        
+
         if !auth.is_err() {
             if auth.as_ref().unwrap().token != "" {
-                info!("Token: {}", auth.unwrap().token); 
-                return Ok(())
+                info!("Token: {}", auth.unwrap().token);
+                return Ok(());
             }
         } else {
             error!("{}", auth.err().unwrap().to_string())
@@ -96,8 +96,7 @@ impl eframe::App for LoginScreen {
                         ui.horizontal_centered(|ui| {
                             ui.vertical_centered(|ui| {
                                 ui.label(
-                                    WidgetText::from(self.err_msg.clone())
-                                        .color(Color32::WHITE),
+                                    WidgetText::from(self.err_msg.clone()).color(Color32::WHITE),
                                 );
                             });
                         });
@@ -133,14 +132,16 @@ impl eframe::App for LoginScreen {
                     self.api.login = self.login.clone();
                     self.api.password = self.password.clone();
                     let resp = self.api.send();
-                    if let Ok(()) = resp {  
+                    if let Ok(()) = resp {
                         info!("Auth token requested");
                         if let Err(e) = self.api.save() {
                             let err = format!("Couldn't save token. Error: {e}");
                             error!("{}", err);
-                            msgbox::create("Error", &err, msgbox::IconType::Error).unwrap_or_else(|e| {
-                                error!("Couldn't show msgbox: {e}");
-                            });
+                            msgbox::create("Error", &err, msgbox::IconType::Error).unwrap_or_else(
+                                |e| {
+                                    error!("Couldn't show msgbox: {e}");
+                                },
+                            );
                         } else {
                             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                         }

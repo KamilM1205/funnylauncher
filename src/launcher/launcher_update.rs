@@ -1,5 +1,10 @@
 use std::{
-    env, error::Error, fs::{rename, File}, process::exit, sync::mpsc::Sender, time::Duration
+    env,
+    error::Error,
+    fs::{rename, File},
+    process::exit,
+    sync::mpsc::Sender,
+    time::Duration,
 };
 
 use log::{debug, error, info};
@@ -80,7 +85,7 @@ pub fn download_launcher(data_sender: Sender<Command>) -> Result<(), Box<dyn std
     }?;
 
     if !resp.status().is_success() {
-        return Err(format!("Server error: {}", resp.status().to_string()).into())
+        return Err(format!("Server error: {}", resp.status().to_string()).into());
     }
 
     let size = match resp.content_length() {
@@ -139,7 +144,7 @@ pub fn download_launcher(data_sender: Sender<Command>) -> Result<(), Box<dyn std
         }?;
 
         if !resp.status().is_success() {
-            return Err(format!("Server error: {}", resp.status().to_string()).into())
+            return Err(format!("Server error: {}", resp.status().to_string()).into());
         }
 
         match std::io::copy(&mut resp, &mut file) {
@@ -193,7 +198,7 @@ pub fn need_update() -> Result<bool, Box<dyn std::error::Error>> {
     let client = blocking::Client::builder()
         .timeout(Duration::from_millis(1500))
         .build()?;
-    
+
     let resp = match client.get(format!("{}/version", URL)).send() {
         Ok(r) => Ok(r),
         Err(e) => {
@@ -214,7 +219,7 @@ pub fn need_update() -> Result<bool, Box<dyn std::error::Error>> {
     }?;
 
     if !resp.status().is_success() {
-        return Err(format!("Server error: {}", resp.status().to_string()).into())
+        return Err(format!("Server error: {}", resp.status().to_string()).into());
     }
 
     let value = match resp.text() {
