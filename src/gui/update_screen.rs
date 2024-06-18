@@ -157,6 +157,6 @@ impl UpdateScreen {
 
 impl eframe::App for UpdateScreen {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        windowframe::show(&self.wframe, ctx, |ui| self.draw_contents(ui));
+        windowframe::show(&mut self.wframe.clone(), ctx, |ui| self.draw_contents(ui));
     }
 }

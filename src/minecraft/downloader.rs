@@ -4,7 +4,7 @@ use log::{debug, error, info};
 use reqwest::header::{HeaderValue, RANGE};
 use unzpack::Unzpack;
 
-use crate::{launcher::commands::Command, utils::constants::URL};
+use crate::{launcher::commands::Command, utils::constants::{GET_MINECRAFT, URL}};
 
 pub const DOWNLOAD: &str = "MINECRAFT/DOWNLOAD";
 
@@ -48,7 +48,7 @@ pub fn download_minecraft(data_sender: Sender<Command>) -> Result<(), Box<dyn st
     info!(target: DOWNLOAD, "Starting download minecraft");
 
     const CHUNK_SIZE: u32 = 1000 * 1024;
-    let url = format!("{}/get_minecraft", URL);
+    let url = format!("{}{}", URL, GET_MINECRAFT);
 
     let client = reqwest::blocking::Client::new();
     let res = match client.get(&url).send() {

@@ -76,7 +76,7 @@ impl LoginScreen {
 
 impl eframe::App for LoginScreen {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        windowframe::show(&self.wframe, ctx, |ui| {
+        windowframe::show(&mut self.wframe, ctx, |ui| {
             if ctx.input(|i| i.viewport().close_requested()) {
                 info!("Exiting from login screen.");
                 if self.api.token.is_empty() {

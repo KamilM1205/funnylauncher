@@ -54,7 +54,7 @@ impl MainScreen {
             settings_modal: SettingsModal::new(locale.clone()),
             progress: 1.0,
             error_msg: MsgBoxScreen::default(),
-            wframe: WindowFrameData::new(locale.clone(), "FunnyLauncher"),
+            wframe: WindowFrameData::new(locale.clone(), "FunnyLauncher").with_account(true),
             news: NewsWidget::new(locale.clone())?,
             locale,
         })
@@ -139,7 +139,7 @@ impl MainScreen {
 
 impl eframe::App for MainScreen {
     fn update(&mut self, ctx: &egui::Context, _: &mut eframe::Frame) {
-        windowframe::show(&self.wframe.clone(), ctx, |ui| {
+        windowframe::show(&mut self.wframe.clone(), ctx, |ui| {
             if ui.ctx().input(|i| i.viewport().close_requested()) {
                 match self.logic_sender.send(Command::EXIT) {
                     Ok(_) => (),

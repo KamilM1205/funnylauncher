@@ -10,3 +10,7 @@ pub const REGISTRATION_URL: &str = "https://localhost:8080/signup";
 pub const GET_USER_URL: &str = "/api/v1/account/me";
 pub const UPDATE_USER_ONLINE_URL: &str = "/api/v1/updateOnline";
 pub const GET_NEWS_LIST: &str = "/api/v1/news/list";
+pub const GET_LAUNCHER_VERSION: &str = "/api/v1/getLatestVersion";
+pub const GET_LAUNCHER_UPDATE: &str = "/api/v1/launcher/downloadLatestLauncher&os=linux";
+pub const GET_MINECRAFT_CHECKSUM: &str = "/api/v1/minecraft/checksum";
+pub const GET_MINECRAFT: &str = "/api/v1/minecraft";

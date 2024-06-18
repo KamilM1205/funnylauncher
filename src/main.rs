@@ -3,11 +3,14 @@
 use std::process::exit;
 
 use funnylauncher::{
-    api::auth::Auth, gui::{login_screen::LoginScreen, update_screen::UpdateScreen}, launcher::{
+    api::auth::Auth,
+    gui::{login_screen::LoginScreen, update_screen::UpdateScreen},
+    launcher::{
         config::AppConfig,
         launcher_controller::{self, LauncherController},
         locale::Locale,
-    }, utils::log::init_logger
+    },
+    utils::log::init_logger,
 };
 use log::{error, info};
 
@@ -76,7 +79,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 msgbox::IconType::Error,
             )
             .unwrap_or_else(|e| error!("{e}"));
-            
+
             Auth::remove_token()?;
             continue 'rerun;
         }

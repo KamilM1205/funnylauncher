@@ -13,7 +13,7 @@ use reqwest::{
     header::{HeaderValue, RANGE},
 };
 
-use crate::utils::constants::{URL, VERSION};
+use crate::utils::{constants::{GET_LAUNCHER_UPDATE, GET_LAUNCHER_VERSION, URL, VERSION}, relaunch::relaunch};
 
 const UPDATE: &str = "UPDATE";
 const DOWNLOAD: &str = "UPDATE/DOWNLOAD";
@@ -71,7 +71,7 @@ pub fn download_launcher(data_sender: Sender<Command>) -> Result<(), Box<dyn std
     info!(target: DOWNLOAD, "Starting update...");
 
     const CHUNK_SIZE: u32 = 100 * 1024;
-    let url = format!("{}/get_launcher", URL);
+    let url = format!("{}{}", URL, GET_LAUNCHER_UPDATE);
 
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_millis(1500))
@@ -176,10 +176,7 @@ pub fn download_launcher(data_sender: Sender<Command>) -> Result<(), Box<dyn std
 
     info!(target: DOWNLOAD, "File moved.");
 
-    std::process::Command::new(&exe_file)
-        .stdout(std::process::Stdio::null()) // It's need to launch launcher as proccess, not
-        // subproccess
-        .stderr(std::process::Stdio::null());
+    relaunch()?;
 
     match data_sender.send(Command::Completed) {
         Ok(()) => Ok(()),
@@ -199,7 +196,7 @@ pub fn need_update() -> Result<bool, Box<dyn std::error::Error>> {
         .timeout(Duration::from_millis(1500))
         .build()?;
 
-    let resp = match client.get(format!("{}/version", URL)).send() {
+    let resp = match client.get(format!("{}{}", URL, GET_LAUNCHER_VERSION)).send() {
         Ok(r) => Ok(r),
         Err(e) => {
             error!(target: UPDATE, "Error while \"version\" request: {e}");

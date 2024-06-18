@@ -7,7 +7,9 @@ pub struct WindowFrameData {
     resizable: bool,
     minimaizable: bool,
     movable: bool,
+    show_account: bool,
     locale: Value,
+    popup_visible: bool,
 }
 
 impl WindowFrameData {
@@ -18,7 +20,9 @@ impl WindowFrameData {
             resizable: true,
             minimaizable: true,
             movable: true,
+            show_account: false,
             locale,
+            popup_visible: false,
         }
     }
 
@@ -41,13 +45,28 @@ impl WindowFrameData {
         self.movable = movable;
         self
     }
+
+    pub fn with_account(mut self, account: bool) -> Self {
+        self.show_account = account;
+        self
+    }
 }
 
 pub mod windowframe {
+    use std::process::exit;
+
+    use egui::Image;
+    use log::error;
+
+    use crate::{
+        api::{account::Account, auth::Auth},
+        utils::relaunch::relaunch,
+    };
+
     use super::WindowFrameData;
 
     pub fn show(
-        data: &WindowFrameData,
+        data: &mut WindowFrameData,
         ctx: &egui::Context,
         add_contents: impl FnOnce(&mut egui::Ui),
     ) {
@@ -83,7 +102,7 @@ pub mod windowframe {
             });
     }
 
-    fn titlebar(data: &WindowFrameData, ui: &mut egui::Ui, titlebar_rect: egui::epaint::Rect) {
+    fn titlebar(data: &mut WindowFrameData, ui: &mut egui::Ui, titlebar_rect: egui::epaint::Rect) {
         use egui::*;
 
         let titlebar_response = ui.interact(titlebar_rect, Id::new("titlebar"), Sense::click());
@@ -112,7 +131,7 @@ pub mod windowframe {
                 ui.visuals_mut().button_frame = false;
                 ui.add_space(8.0);
 
-                titlebat_buttons(ui, data);
+                titlebar_buttons(ui, data);
             });
         });
 
@@ -128,7 +147,7 @@ pub mod windowframe {
         }
     }
 
-    fn titlebat_buttons(ui: &mut egui::Ui, data: &WindowFrameData) {
+    fn titlebar_buttons(ui: &mut egui::Ui, data: &mut WindowFrameData) {
         use egui::{Button, RichText};
 
         let button_height = 20.0;
@@ -165,6 +184,28 @@ pub mod windowframe {
                 ui.ctx()
                     .send_viewport_cmd(egui::ViewportCommand::Minimized(true));
             }
+        }
+
+        if data.show_account {
+            let image = Image::new(egui::include_image!("../../assets/user.png"))
+                .max_size(egui::Vec2::new(button_height, button_height));
+            let popup_id = ui.make_persistent_id("user_popup_id");
+
+            let resp = ui.add(egui::ImageButton::new(image));
+            if resp.hovered() {
+                ui.memory_mut(|mem| mem.open_popup(popup_id));
+            } 
+
+            egui::popup::popup_below_widget(ui, popup_id, &resp, |ui| {
+                ui.set_min_width(90.);
+                if ui.button("Logout").clicked() {
+                    Auth::remove_token().unwrap();
+                    relaunch().unwrap_or_else(|e| {
+                        error!("Couldn't relaunch. Error: {e}");
+                    });
+                    exit(0);
+                }
+            });
         }
     }
 }
