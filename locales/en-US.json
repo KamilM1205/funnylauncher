@@ -15,6 +15,7 @@
   "titlebar_close": "Close launcher",
   "titlebar_maximize": "Maximize window",
   "titlebar_minimize": "Minimize window",
+  "titlebar_logout": "Logout",
   "_comment": "Settings section",
   "settings_title": "Settings",
   "settings_language": "Language:",

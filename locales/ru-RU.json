@@ -15,6 +15,7 @@
   "titlebar_close": "Выйти из лаунчера",
   "titlebar_maximize": "На весь экран",
   "titlebar_minimize": "Свернуть",
+  "titlebar_logout": "Выйти",
   "_comment": "Settings section",
   "settings_title": "Настройки",
   "settings_title": "Settings",

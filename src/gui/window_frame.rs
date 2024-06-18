@@ -198,7 +198,7 @@ pub mod windowframe {
 
             egui::popup::popup_below_widget(ui, popup_id, &resp, |ui| {
                 ui.set_min_width(90.);
-                if ui.button("Logout").clicked() {
+                if ui.button(data.locale["titlebar_logout"].as_str().unwrap()).clicked() {
                     Auth::remove_token().unwrap();
                     relaunch().unwrap_or_else(|e| {
                         error!("Couldn't relaunch. Error: {e}");
