@@ -18,7 +18,7 @@ const CONTROLLER: &str = "LAUNCHERCONTROLLER";
 
 pub struct LauncherController {
     locale: Value,
-    account: Account,
+    pub account: Account,
 }
 
 impl LauncherController {

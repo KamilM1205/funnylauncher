@@ -14,10 +14,10 @@ use self::main_screen::MainScreen;
 pub mod login_screen;
 pub mod main_screen;
 pub mod message_screen;
-pub mod news_widget;
 pub mod settings_modal;
 pub mod update_screen;
 pub mod window_frame;
+pub mod news_widget;
 
 pub struct GUI {
     locale: Value,
@@ -34,10 +34,7 @@ impl GUI {
         }
     }
 
-    pub fn run(
-        &mut self,
-        launcher_receiver: Receiver<Command>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn run(&mut self, launcher_receiver: Receiver<Command>) -> Result<(), Box<dyn std::error::Error>> {
         let options = eframe::NativeOptions {
             viewport: egui::ViewportBuilder::default()
                 .with_inner_size([640.0, 480.0])
@@ -51,7 +48,12 @@ impl GUI {
 
         debug!("Starting main screen.");
 
-        let mscreen = MainScreen::new(locale, logic_sender, in_game, launcher_receiver)?;
+        let mscreen = MainScreen::new(
+        locale,
+        logic_sender,
+        in_game,
+        launcher_receiver,
+    )?;
         eframe::run_native(
             CAPTION,
             options,

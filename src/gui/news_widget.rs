@@ -1,10 +1,9 @@
-use std::time::{Duration, SystemTime};
-
-use egui::{vec2, Color32, Id, Layout, Ui, Widget};
+use egui::{vec2, Color32, Layout, Pos2, Ui, Vec2, ViewportCommand};
+use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use log::info;
 use serde_json::Value;
 
-use crate::api::news::{News};
+use crate::api::news::News;
 
 pub struct NewsWidget {
     news: Vec<News>,
@@ -12,6 +11,7 @@ pub struct NewsWidget {
     hover_id: String,
     is_modal_open: bool,
     show_news: Option<News>,
+    cache: CommonMarkCache,
 }
 
 impl NewsWidget {
@@ -22,6 +22,7 @@ impl NewsWidget {
             hover_id: "".to_string(),
             is_modal_open: false,
             show_news: None,
+            cache: CommonMarkCache::default(),
         })
     }
 
@@ -59,13 +60,31 @@ impl NewsWidget {
     pub fn show_modal(&mut self, ui: &mut Ui) {
         let mut open = self.is_modal_open;
 
-        egui::Window::new("News").open(&mut open).show(ui.ctx(), |ui| {
-            egui::TopBottomPanel::top(self.show_news.as_ref().unwrap().id.clone()).show_inside(ui, |ui| {
-                ui.label(&self.show_news.as_ref().unwrap().title);
-            });
+        egui::Window::new("News").open(&mut open)
+            .fixed_size(vec2(ui.ctx().screen_rect().width() - 4., ui.ctx().screen_rect().height()))
+            .fixed_pos(Pos2::new(-2., 32.))
+            .collapsible(false)
+            .title_bar(false)
+            .min_height(ui.ctx().screen_rect().height())
+            .show(ui.ctx(), |ui| {
+                    ui.horizontal(|ui| {
+                        if ui.button("<").clicked() {
+                            self.is_modal_open = false;
+                        }
+                        ui.label(&self.show_news.as_ref().unwrap().title);
+                    });
+                ui.separator();
+                    CommonMarkViewer::new("viewer")
+                        .max_image_width(Some(512))
+                        .show_scrollable(ui, &mut self.cache, &self.show_news.as_ref().unwrap().body);
+                let mut size = ui.available_size();
+                size.y = size.y - 40.;
+                ui.allocate_space(size);
         });
 
-        self.is_modal_open = open;
+        if self.is_modal_open {
+            self.is_modal_open = open;
+        }
     }
 
     pub fn draw(&mut self, ui: &mut Ui) {

@@ -52,7 +52,7 @@ pub mod windowframe {
         add_contents: impl FnOnce(&mut egui::Ui),
     ) {
         let panel_frame = egui::Frame {
-            fill: ctx.style().visuals.window_fill(),
+            fill: ctx.style().visuals.widgets.open.weak_bg_fill,
             stroke: ctx.style().visuals.widgets.noninteractive.fg_stroke,
             outer_margin: 0.5.into(),
             ..Default::default()
